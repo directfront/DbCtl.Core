@@ -3,7 +3,7 @@
     <metadata>
         <id>DbCtl.Core</id>
         <title>DbCtl.Core</title>
-        <version>1.0.0</version>
+        <version>1.0.1</version>
         <description>Core functionality of the DbCtl application.</description>
         <authors>Direct Front Systems (Pty) Ltd.</authors>
         <copyright>
@@ -26,11 +26,16 @@
         <icon>images\database.png</icon>
         <repository type="git" url="https://github.com/directfront/DbCtl.Core" branch="main" />
         <releaseNotes>
-			1.0.0
-			Initial release with initialize and migrate functionality.
+			1.0.1
+			Fixes package references.
 		</releaseNotes>
 		<dependencies>
-			<group targetFramework="netstandard2.1" />
+			<group targetFramework="netstandard2.1">
+				<dependency id="DbCtl.Connectors" version="4.0.0" />
+				<dependency id="Serilog" version="2.10.0" />
+				<dependency id="System.IO.Abstractions" version="13.2.8" />
+				<dependency id="SemanticVersion" version="2.1.0" />
+			</group>
 		</dependencies>
 	</metadata>
     <files>
