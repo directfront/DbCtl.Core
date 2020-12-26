@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>netstandard2.1</TargetFramework>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="DbCtl.Connectors" Version="4.0.0" />
+		<PackageReference Include="Serilog" Version="2.10.0" />
+		<PackageReference Include="System.ComponentModel.Composition" Version="5.0.0" />
+		<PackageReference Include="System.IO.Abstractions" Version="13.2.8" />
+		<PackageReference Include="SemanticVersion" Version="2.1.0" />
+	</ItemGroup>
+
+</Project>
