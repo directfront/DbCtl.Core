@@ -34,7 +34,7 @@ namespace DbCtl.Core.Services
         Task<(ChangeLogEntry Entry, string Contents)> GetScriptAsync(string filename, CancellationToken cancellationToken);
     }
 
-    internal class MigrationScriptService : IMigrationScriptService
+    public class MigrationScriptService : IMigrationScriptService
     {
         private readonly IFileSystem _FileSystem;
         private readonly string _ScriptsPath;
