@@ -28,7 +28,7 @@ namespace DbCtl.Core.Services
         Task<string> GetCurrentVersionAsync(CancellationToken cancellationToken);
     }
 
-    public class DatabaseVersionService
+    public class DatabaseVersionService : IDatabaseVersionService
     {
         private readonly DatabaseConnection _Connection;
 

@@ -3,7 +3,7 @@
     <metadata>
         <id>DbCtl.Core</id>
         <title>DbCtl.Core</title>
-        <version>1.0.2</version>
+        <version>1.0.3</version>
         <description>Core functionality of the DbCtl application.</description>
         <authors>Direct Front Systems (Pty) Ltd.</authors>
         <copyright>
@@ -26,8 +26,8 @@
         <icon>images\database.png</icon>
         <repository type="git" url="https://github.com/directfront/DbCtl.Core" branch="main" />
         <releaseNotes>
-			1.0.2
-			Changed access modifier on MigrationScriptService.
+			1.0.3
+			Fixes interface implementation on DatabaseVersionService.
 		</releaseNotes>
 		<dependencies>
 			<group targetFramework="netstandard2.1">
