@@ -40,6 +40,31 @@ namespace DbCtl.Core.Tests.Services
         }
 
         [Test]
+        public void It_should_strip_the_path_from_the_filename()
+        {
+            var fileSystem = new Mock<IFileSystem>();
+            var service = new MigrationScriptService(fileSystem.Object, "scripts", MigrationType.Forward);
+
+            var directory = new Mock<IDirectory>();
+            directory.Setup(d => d.Exists("scripts")).Returns(true);
+            fileSystem.Setup(d => d.Directory).Returns(directory.Object);
+
+            directory.Setup(d => d.EnumerateFiles("scripts", "F-*", SearchOption.AllDirectories)).Returns(new[]
+            {
+                @".\scripts\f-1.0.1-one.ddl",
+                @".\scripts\f-1.0.2-two.ddl",
+            });
+
+            var scriptsToRun = service.FindScripts("1.0.1");
+
+            var expected = new[] {
+                "f-1.0.2-two.ddl"
+            };
+
+            CollectionAssert.AreEqual(expected, scriptsToRun);
+        }
+
+        [Test]
         public void It_should_find_the_forward_scripts_after_the_specified_version()
         {
             var fileSystem = new Mock<IFileSystem>();

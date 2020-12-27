@@ -73,6 +73,7 @@ namespace DbCtl.Core.Services
         {
             return _FileSystem.Directory
                 .EnumerateFiles(_ScriptsPath, _MigrationType == MigrationType.Forward ? "F-*" : "B-*", SearchOption.AllDirectories)
+                .Select(filename => Path.GetFileName(filename))
                 .Select(filename => (filename, FilenameParser.Parse(filename).Version))
                 .Where(item => item.Version > version);
         }
