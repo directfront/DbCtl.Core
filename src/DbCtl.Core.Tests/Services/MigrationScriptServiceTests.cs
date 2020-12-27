@@ -19,21 +19,34 @@ using NUnit.Framework;
 using System;
 using System.IO;
 using System.IO.Abstractions;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace DbCtl.Core.Tests.Services
 {
     [TestFixture]
     public class When_calling_find_scripts_on_migration_script_service
     {
+        private Mock<IChangeDateTimeProvider> _ChangeDateTimeProvider;
+        private Mock<IFileSystem> _FileSystem;
+        private Mock<IDirectory> _Directory;
+
+        [SetUp]
+        public void Setup()
+        {
+            _ChangeDateTimeProvider = new Mock<IChangeDateTimeProvider>();
+            _Directory = new Mock<IDirectory>();
+            _FileSystem = new Mock<IFileSystem>();
+            _FileSystem.Setup(fs => fs.Directory).Returns(_Directory.Object);        
+        }
+
         [Test]
         public void It_should_throw_an_exception_when_the_scripts_path_does_not_exist()
         {
-            var fileSystem = new Mock<IFileSystem>();
-            var service = new MigrationScriptService(fileSystem.Object, "scripts", MigrationType.Forward);
+            _Directory.Setup(d => d.Exists("scripts")).Returns(false);
 
-            var directory = new Mock<IDirectory>();
-            directory.Setup(d => d.Exists("scripts")).Returns(false);
-            fileSystem.Setup(fs => fs.Directory).Returns(directory.Object);
+            var service = new MigrationScriptService(_FileSystem.Object, "scripts", MigrationType.Forward, _ChangeDateTimeProvider.Object);
 
             var exception = Assert.Throws<Exception>(() => service.FindScripts("1.2.3"));
             Assert.AreEqual("Failed to find path scripts.", exception.Message);
@@ -42,19 +55,15 @@ namespace DbCtl.Core.Tests.Services
         [Test]
         public void It_should_strip_the_path_from_the_filename()
         {
-            var fileSystem = new Mock<IFileSystem>();
-            var service = new MigrationScriptService(fileSystem.Object, "scripts", MigrationType.Forward);
+            _Directory.Setup(d => d.Exists("scripts")).Returns(true);
 
-            var directory = new Mock<IDirectory>();
-            directory.Setup(d => d.Exists("scripts")).Returns(true);
-            fileSystem.Setup(d => d.Directory).Returns(directory.Object);
-
-            directory.Setup(d => d.EnumerateFiles("scripts", "F-*", SearchOption.AllDirectories)).Returns(new[]
+            _Directory.Setup(d => d.EnumerateFiles("scripts", "F-*", SearchOption.AllDirectories)).Returns(new[]
             {
                 @".\scripts\f-1.0.1-one.ddl",
                 @".\scripts\f-1.0.2-two.ddl",
             });
 
+            var service = new MigrationScriptService(_FileSystem.Object, "scripts", MigrationType.Forward, _ChangeDateTimeProvider.Object);
             var scriptsToRun = service.FindScripts("1.0.1");
 
             var expected = new[] {
@@ -67,14 +76,9 @@ namespace DbCtl.Core.Tests.Services
         [Test]
         public void It_should_find_the_forward_scripts_after_the_specified_version()
         {
-            var fileSystem = new Mock<IFileSystem>();
-            var service = new MigrationScriptService(fileSystem.Object, "scripts", MigrationType.Forward);
+            _Directory.Setup(d => d.Exists("scripts")).Returns(true);
 
-            var directory = new Mock<IDirectory>();
-            directory.Setup(d => d.Exists("scripts")).Returns(true);
-            fileSystem.Setup(d => d.Directory).Returns(directory.Object);
-
-            directory.Setup(d => d.EnumerateFiles("scripts", "F-*", SearchOption.AllDirectories)).Returns(new[]
+            _Directory.Setup(d => d.EnumerateFiles("scripts", "F-*", SearchOption.AllDirectories)).Returns(new[]
             {
                 "f-1.0.1-one.ddl",
                 "f-1.1.0-three.ddl",
@@ -83,6 +87,7 @@ namespace DbCtl.Core.Tests.Services
                 "f-1.1.1-four.ddl",
             });
 
+            var service = new MigrationScriptService(_FileSystem.Object, "scripts", MigrationType.Forward, _ChangeDateTimeProvider.Object);
             var scriptsToRun = service.FindScripts("1.0.2");
 
             var expected = new[] {
@@ -97,14 +102,9 @@ namespace DbCtl.Core.Tests.Services
         [Test]
         public void It_should_find_the_backward_scripts_up_until_the_specified_version()
         {
-            var fileSystem = new Mock<IFileSystem>();
-            var service = new MigrationScriptService(fileSystem.Object, "scripts", MigrationType.Backward);
+            _Directory.Setup(d => d.Exists("scripts")).Returns(true);
 
-            var directory = new Mock<IDirectory>();
-            directory.Setup(d => d.Exists("scripts")).Returns(true);
-            fileSystem.Setup(d => d.Directory).Returns(directory.Object);
-
-            directory.Setup(d => d.EnumerateFiles("scripts", "B-*", SearchOption.AllDirectories)).Returns(new[]
+            _Directory.Setup(d => d.EnumerateFiles("scripts", "B-*", SearchOption.AllDirectories)).Returns(new[]
             {
                 "b-1.0.1-one.ddl",
                 "b-1.1.0-three.ddl",
@@ -113,6 +113,7 @@ namespace DbCtl.Core.Tests.Services
                 "b-1.1.1-four.ddl",
             });
 
+            var service = new MigrationScriptService(_FileSystem.Object, "scripts", MigrationType.Backward, _ChangeDateTimeProvider.Object);
             var scriptsToRun = service.FindScripts("1.1.0");
 
             var expected = new[] {
@@ -121,6 +122,60 @@ namespace DbCtl.Core.Tests.Services
             };
 
             CollectionAssert.AreEqual(expected, scriptsToRun);
+        }
+    }
+
+    [TestFixture]
+    public class When_calling_get_scripts_async_on_migration_script_service
+    {
+        private DateTime _ChangeDateTime = new DateTime(2020, 02, 12);
+        private Mock<IChangeDateTimeProvider> _ChangeDateTimeProvider;
+        private CancellationToken _CancellationToken = new CancellationToken();
+        private Mock<IFileSystem> _FileSystem;
+        private Mock<IFile> _File;
+
+        [SetUp]
+        public void Setup()
+        {
+            _ChangeDateTimeProvider = new Mock<IChangeDateTimeProvider>();
+            _ChangeDateTimeProvider.Setup(p => p.Now).Returns(_ChangeDateTime);
+
+            _File = new Mock<IFile>();
+            _FileSystem = new Mock<IFileSystem>();
+            _FileSystem.SetupGet(fs => fs.File).Returns(_File.Object);
+        }
+
+        [Test]
+        public void It_should_throw_an_exception_when_the_script_does_not_exist()
+        {
+            _File.Setup(f => f.Exists(It.IsAny<string>())).Returns(false);
+
+            var service = new MigrationScriptService(_FileSystem.Object, "scripts", MigrationType.Forward, _ChangeDateTimeProvider.Object);
+
+            var exception = Assert.ThrowsAsync<FileNotFoundException>(async () => await service.GetScriptAsync(@".\scripts\f-1.0.1-one.ddl", _CancellationToken));
+            Assert.AreEqual("Failed to find script file.", exception.Message);
+        }
+
+        [Test]
+        public async Task It_should_return_the_contents_of_the_script_file_and_a_corresponding_change_log_entry()
+        {
+            const string scriptFile = @"scripts\f-1.0.1-one.ddl";
+            var contents = Encoding.UTF8.GetBytes("SELECT 1");
+
+            _File.Setup(f => f.Exists(scriptFile)).Returns(true);
+            _File.Setup(f => f.ReadAllBytesAsync(scriptFile, _CancellationToken)).ReturnsAsync(contents);
+
+            var service = new MigrationScriptService(_FileSystem.Object, "scripts", MigrationType.Forward, _ChangeDateTimeProvider.Object);
+            var script = await service.GetScriptAsync("f-1.0.1-one.ddl", _CancellationToken);
+
+            Assert.AreEqual(contents, script.Contents);
+            Assert.AreEqual("1.0.1", script.Entry.Version);
+            Assert.AreEqual("one", script.Entry.Description);
+            Assert.AreEqual(_ChangeDateTime, script.Entry.ChangeDateTime);
+            Assert.AreEqual("f-1.0.1-one.ddl", script.Entry.Filename);
+            Assert.AreEqual(MigrationType.Forward, script.Entry.MigrationType);
+            Assert.AreEqual("b1698e52a0f16203489454196a0c6307", script.Entry.Hash);
+            Assert.AreEqual(Environment.UserName, script.Entry.AppliedBy);
         }
     }
 }
