@@ -3,7 +3,7 @@
     <metadata>
         <id>DbCtl.Core</id>
         <title>DbCtl.Core</title>
-        <version>1.0.4</version>
+        <version>1.0.5</version>
         <description>Core functionality of the DbCtl application.</description>
         <authors>Direct Front Systems (Pty) Ltd.</authors>
         <copyright>
@@ -26,8 +26,8 @@
         <icon>images\database.png</icon>
         <repository type="git" url="https://github.com/directfront/DbCtl.Core" branch="main" />
         <releaseNotes>
-			1.0.4
-			Fixes issue where the path is not stripped from the filename before being parsed.
+			1.0.5
+			Fixes issue where getting the script did not strip off the path before generating the change log entry.
 		</releaseNotes>
 		<dependencies>
 			<group targetFramework="netstandard2.1">

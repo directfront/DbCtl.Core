@@ -21,6 +21,7 @@ using System.IO;
 using System.IO.Abstractions;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -39,10 +40,17 @@ namespace DbCtl.Core.Services
         private readonly IFileSystem _FileSystem;
         private readonly string _ScriptsPath;
         private readonly MigrationType _MigrationType;
+        private readonly IChangeDateTimeProvider _ChangeDateTimeProvider;
 
-        public MigrationScriptService(IFileSystem fileSystem, string scriptsPath, MigrationType type)
+        public MigrationScriptService(string scriptsPath, MigrationType type)
+            : this(new FileSystem(), scriptsPath, type, new ChangeDateTimeProvider())
+        {
+        }
+
+        public MigrationScriptService(IFileSystem fileSystem, string scriptsPath, MigrationType type, IChangeDateTimeProvider changeDateTimeProvider)
         {
             _FileSystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
+            _ChangeDateTimeProvider = changeDateTimeProvider ?? throw new ArgumentNullException(nameof(changeDateTimeProvider));
             _ScriptsPath = string.IsNullOrEmpty(scriptsPath) ? throw new ArgumentNullException(nameof(scriptsPath)) : scriptsPath;
             _MigrationType = type;
         }
@@ -87,11 +95,12 @@ namespace DbCtl.Core.Services
 
             Log.Debug("Reading contents of script {path}", path);
 
-            if (File.Exists(path))
+            if (_FileSystem.File.Exists(path))
             {
-                var contents = await File.ReadAllTextAsync(path, cancellationToken);
+                var contents = await _FileSystem.File.ReadAllBytesAsync(path, cancellationToken);
                 Log.Debug("Read {bytes} bytes from {path}", contents.Length, filename);
-                return (new ChangeLogEntry(path), contents);
+                using var stream = new MemoryStream(contents);
+                return (new ChangeLogEntry(filename, Environment.UserName, _ChangeDateTimeProvider.Now, stream), Encoding.UTF8.GetString(contents));
             }
 
             throw new FileNotFoundException("Failed to find script file.", filename);
