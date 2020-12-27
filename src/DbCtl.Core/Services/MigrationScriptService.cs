@@ -79,11 +79,14 @@ namespace DbCtl.Core.Services
 
         private IEnumerable<(string filename, string Version)> FindScriptsGreaterThan(SemanticVersion version)
         {
-            return _FileSystem.Directory
+            var scripts = _FileSystem.Directory
                 .EnumerateFiles(_ScriptsPath, _MigrationType == MigrationType.Forward ? "F-*" : "B-*", SearchOption.AllDirectories)
                 .Select(filename => Path.GetFileName(filename))
-                .Select(filename => (filename, FilenameParser.Parse(filename).Version))
-                .Where(item => item.Version > version);
+                .Select(filename => (filename, FilenameParser.Parse(filename).Version));
+                
+            return _MigrationType == MigrationType.Forward 
+                ? scripts.Where(item => item.Version > version) 
+                : scripts.Where(item => item.Version == version);
         }
 
         public async Task<(ChangeLogEntry Entry, string Contents)> GetScriptAsync(string filename, CancellationToken cancellationToken)

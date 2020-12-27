@@ -46,7 +46,7 @@ namespace DbCtl.Core.Tests.Commands
         }
 
         [Test]
-        public async Task It_should_execute_the_missing_scripts_against_the_database()
+        public async Task It_should_execute_the_missing_forward_migration_scripts_against_the_database()
         {
             var changeLogEntry1 = new ChangeLogEntry("f-1.0.1-script.ddl", "DbCtl", new System.DateTime(2020, 02, 14), Stream.Null);
             var changeLogEntry2 = new ChangeLogEntry("f-1.1.2-script.ddl", "DbCtl", new System.DateTime(2020, 02, 14), Stream.Null);
@@ -73,6 +73,28 @@ namespace DbCtl.Core.Tests.Commands
 
             _Connector.Verify(connector => connector.ExecuteScriptAsync(ConnectionString, "script-contents-2", cancellationToken));
             _Connector.Verify(connector => connector.AddChangeLogEntryAsync(ConnectionString, changeLogEntry2, cancellationToken));
+        }
+
+        [Test]
+        public async Task It_should_execute_the_current_backward_migration_script_against_the_database()
+        {
+            var changeLogEntry = new ChangeLogEntry("b-1.1.2-script.ddl", "DbCtl", new System.DateTime(2020, 02, 16), Stream.Null);
+
+            var cancellationToken = new CancellationToken();
+
+            _DatabaseVersionService.Setup(dbvs => dbvs.GetCurrentVersionAsync(cancellationToken)).ReturnsAsync("1.1.2");
+            _MigrationScriptService.Setup(mss => mss.FindScripts("1.1.2")).Returns(new[] {
+                "b-1.1.2-script.ddl"
+            });
+
+            _MigrationScriptService.Setup(mss => mss.GetScriptAsync("b-1.1.2-script.ddl", cancellationToken))
+                .ReturnsAsync((changeLogEntry, "script-contents"));
+
+            _Command.Type = MigrationType.Backward;
+            await _Command.ExecuteAsync(cancellationToken);
+
+            _Connector.Verify(connector => connector.ExecuteScriptAsync(ConnectionString, "script-contents", cancellationToken));
+            _Connector.Verify(connector => connector.AddChangeLogEntryAsync(ConnectionString, changeLogEntry, cancellationToken));
         }
 
         [Test]

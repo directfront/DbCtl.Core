@@ -100,7 +100,7 @@ namespace DbCtl.Core.Tests.Services
         }
 
         [Test]
-        public void It_should_find_the_backward_scripts_up_until_the_specified_version()
+        public void It_should_find_the_current_backward_script()
         {
             _Directory.Setup(d => d.Exists("scripts")).Returns(true);
 
@@ -117,8 +117,7 @@ namespace DbCtl.Core.Tests.Services
             var scriptsToRun = service.FindScripts("1.1.0");
 
             var expected = new[] {
-                "b-1.1.2-five.ddl",
-                "b-1.1.1-four.ddl"
+                "b-1.1.0-three.ddl"
             };
 
             CollectionAssert.AreEqual(expected, scriptsToRun);
