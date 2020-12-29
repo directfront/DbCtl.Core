@@ -55,15 +55,17 @@ namespace DbCtl.Core.Tests.Services
         [Test]
         public void It_should_strip_the_path_from_the_filename()
         {
-            _Directory.Setup(d => d.Exists("scripts")).Returns(true);
+            var scriptsDirectory = "scripts";
 
-            _Directory.Setup(d => d.EnumerateFiles("scripts", "F-*", SearchOption.AllDirectories)).Returns(new[]
+            _Directory.Setup(d => d.Exists(scriptsDirectory)).Returns(true);
+
+            _Directory.Setup(d => d.EnumerateFiles(scriptsDirectory, "F-*", SearchOption.AllDirectories)).Returns(new[]
             {
-                @".\scripts\f-1.0.1-one.ddl",
-                @".\scripts\f-1.0.2-two.ddl",
+                Path.Combine(scriptsDirectory, "f-1.0.1-one.ddl"),
+                Path.Combine(scriptsDirectory, "f-1.0.2-two.ddl")
             });
 
-            var service = new MigrationScriptService(_FileSystem.Object, "scripts", MigrationType.Forward, _ChangeDateTimeProvider.Object);
+            var service = new MigrationScriptService(_FileSystem.Object, scriptsDirectory, MigrationType.Forward, _ChangeDateTimeProvider.Object);
             var scriptsToRun = service.FindScripts("1.0.1");
 
             var expected = new[] {
