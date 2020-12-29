@@ -4,6 +4,21 @@
 		<TargetFramework>netstandard2.1</TargetFramework>
 		<AssemblyVersion>1.1.0.0</AssemblyVersion>
 		<FileVersion>1.1.0.0</FileVersion>
+		<Description>Core functionality of the DbCtl application.</Description>
+		<Version>1.1.0</Version>
+		<Authors>Sydney du Plooy</Authors>
+		<Company>Direct Front Systems (Pty) Ltd.</Company>
+		<Product>DbCtl</Product>
+		<Copyright>Copyright 2020 Direct Front Systems (Pty) Ltd.</Copyright>
+		<PackageLicenseFile></PackageLicenseFile>
+		<PackageProjectUrl>https://github.com/directfront/DbCtl.Core</PackageProjectUrl>
+		<PackageIcon>database.png</PackageIcon>
+		<RepositoryUrl>https://github.com/directfront/DbCtl.Core</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<PackageReleaseNotes>1.1.0
+Changed backward migration functionality to execute the current backward migration script only, providing single-step backward migrations.</PackageReleaseNotes>
+		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -12,6 +27,14 @@
 		<PackageReference Include="System.ComponentModel.Composition" Version="5.0.0" />
 		<PackageReference Include="System.IO.Abstractions" Version="13.2.8" />
 		<PackageReference Include="SemanticVersion" Version="2.1.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="..\..\icons\database.png">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
 	</ItemGroup>
 
 </Project>

@@ -55,15 +55,17 @@ namespace DbCtl.Core.Tests.Services
         [Test]
         public void It_should_strip_the_path_from_the_filename()
         {
-            _Directory.Setup(d => d.Exists("scripts")).Returns(true);
+            var scriptsDirectory = "scripts";
 
-            _Directory.Setup(d => d.EnumerateFiles("scripts", "F-*", SearchOption.AllDirectories)).Returns(new[]
+            _Directory.Setup(d => d.Exists(scriptsDirectory)).Returns(true);
+
+            _Directory.Setup(d => d.EnumerateFiles(scriptsDirectory, "F-*", SearchOption.AllDirectories)).Returns(new[]
             {
-                @".\scripts\f-1.0.1-one.ddl",
-                @".\scripts\f-1.0.2-two.ddl",
+                Path.Combine(scriptsDirectory, "f-1.0.1-one.ddl"),
+                Path.Combine(scriptsDirectory, "f-1.0.2-two.ddl")
             });
 
-            var service = new MigrationScriptService(_FileSystem.Object, "scripts", MigrationType.Forward, _ChangeDateTimeProvider.Object);
+            var service = new MigrationScriptService(_FileSystem.Object, scriptsDirectory, MigrationType.Forward, _ChangeDateTimeProvider.Object);
             var scriptsToRun = service.FindScripts("1.0.1");
 
             var expected = new[] {
@@ -151,14 +153,14 @@ namespace DbCtl.Core.Tests.Services
 
             var service = new MigrationScriptService(_FileSystem.Object, "scripts", MigrationType.Forward, _ChangeDateTimeProvider.Object);
 
-            var exception = Assert.ThrowsAsync<FileNotFoundException>(async () => await service.GetScriptAsync(@".\scripts\f-1.0.1-one.ddl", _CancellationToken));
+            var exception = Assert.ThrowsAsync<FileNotFoundException>(async () => await service.GetScriptAsync(Path.Combine("scripts", "f-1.0.1-one.ddl"), _CancellationToken));
             Assert.AreEqual("Failed to find script file.", exception.Message);
         }
 
         [Test]
         public async Task It_should_return_the_contents_of_the_script_file_and_a_corresponding_change_log_entry()
         {
-            const string scriptFile = @"scripts\f-1.0.1-one.ddl";
+            var scriptFile = Path.Combine("scripts", "f-1.0.1-one.ddl");
             var contents = Encoding.UTF8.GetBytes("SELECT 1");
 
             _File.Setup(f => f.Exists(scriptFile)).Returns(true);
