@@ -7,7 +7,7 @@ install:
   - dotnet restore src/DbCtl.Core.sln
 
 script:
-  - dotnet test src/DbCtl.Core.UnitTests/DbCtl.Core.UnitTests.csproj
+  - dotnet test src/DbCtl.Core.Tests/DbCtl.Core.Tests.csproj
   - dotnet build -c Release src/DbCtl.Core.sln
 
 before_deploy:
