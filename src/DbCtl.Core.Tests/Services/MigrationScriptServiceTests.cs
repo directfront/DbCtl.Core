@@ -153,14 +153,14 @@ namespace DbCtl.Core.Tests.Services
 
             var service = new MigrationScriptService(_FileSystem.Object, "scripts", MigrationType.Forward, _ChangeDateTimeProvider.Object);
 
-            var exception = Assert.ThrowsAsync<FileNotFoundException>(async () => await service.GetScriptAsync(@".\scripts\f-1.0.1-one.ddl", _CancellationToken));
+            var exception = Assert.ThrowsAsync<FileNotFoundException>(async () => await service.GetScriptAsync(Path.Combine("scripts", "f-1.0.1-one.ddl"), _CancellationToken));
             Assert.AreEqual("Failed to find script file.", exception.Message);
         }
 
         [Test]
         public async Task It_should_return_the_contents_of_the_script_file_and_a_corresponding_change_log_entry()
         {
-            const string scriptFile = @"scripts\f-1.0.1-one.ddl";
+            var scriptFile = Path.Combine("scripts", "f-1.0.1-one.ddl");
             var contents = Encoding.UTF8.GetBytes("SELECT 1");
 
             _File.Setup(f => f.Exists(scriptFile)).Returns(true);
