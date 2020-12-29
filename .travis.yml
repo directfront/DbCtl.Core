@@ -1,0 +1,21 @@
+os: linux
+dist: bionic
+language: csharp
+dotnet: 3.1.404
+
+install:
+  - dotnet restore src/DbCtl.Core.sln
+
+script:
+  - dotnet test src/DbCtl.Core.UnitTests/DbCtl.Core.UnitTests.csproj
+  - dotnet build -c Release src/DbCtl.Core.sln
+
+before_deploy:
+- dotnet pack -c Release src/DbCtl.Core/DbCtl.Core.csproj
+
+deploy:
+  skip_cleanup: true
+  provider: script
+  script: nuget push src/DbCtl.Core/bin/Release/DbCtl.Core.*.nupkg -Verbosity detailed -Source $NUGETSOURCE -ApiKey $NUGETAPIKEY -SkipDuplicate
+  on:
+    branch: main
